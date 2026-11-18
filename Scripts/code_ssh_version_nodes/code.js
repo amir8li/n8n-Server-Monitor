@@ -1,7 +1,6 @@
 // code of Code in JavaScript node
-
 const chatIds = [
-  '-1004427360464' 
+  // your group id(s)
 ];
 
 const reportText = $('Basic LLM Chain').first().json.text;
