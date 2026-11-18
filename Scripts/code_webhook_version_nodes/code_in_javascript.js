@@ -1,7 +1,6 @@
 // code of Code in JavaScript node
 const chatIds = [
-  '-1004427360464'
-  // '1991057133'
+  // your group id(s)
 ];
 function sanitizeTelegramHtml(rawText) {
   if (!rawText) return '';
