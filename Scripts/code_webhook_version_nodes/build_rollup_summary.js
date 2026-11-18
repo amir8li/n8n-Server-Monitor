@@ -1,7 +1,6 @@
 // code of Build Rollup Summary node
 const chatIds = [
-  '-1004427360464'
-  // '1991057133'
+  // your group id(s)
 ];
 let allReports = [];
 
@@ -48,18 +47,18 @@ for (const item of allReports) {
   }
 }
 
-const now = new Date().toLocaleString('fa-IR', { timeZone: 'Asia/Tehran' });
+const now = new Date().toLocaleString('en-US', { timeZone: 'Asia/Tehran', hour12: false });
 
 const message = 
-`📊 <b>داشبورد وضعیت سلامت زیرساخت</b>
-⏱️ زمان بررسی: <code>${now}</code>
+`📊 <b>Infrastructure Health Status Dashboard</b>
+⏱️ Audit Time: <code>${now}</code>
 ━━━━━━━━━━━━━━━━━━━━
 
 ${serverStatusList.join('\n')}
 
 ━━━━━━━━━━━━━━━━━━━━
-📈 <b>آمار کل:</b> <code>${serverStatusList.length}</code> سرور بررسی شد.
-🟢 وضعیت پایدار: <code>${healthyCount}</code> | 🔴 نیازمند بررسی: <code>${alertCount}</code>`;
+📈 <b>Total Summary:</b> <code>${serverStatusList.length}</code> servers audited.
+🟢 Operational: <code>${healthyCount}</code> | 🔴 Needs Attention: <code>${alertCount}</code>`;
 
 return chatIds.map(id => ({
   json: {
