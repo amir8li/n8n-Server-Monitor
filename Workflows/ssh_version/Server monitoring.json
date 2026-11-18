@@ -1,0 +1,257 @@
+{
+  "name": "Server monitoring",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert DevOps engineer delivering a concise server and edge-network health update to a team chat.\n\nAnalyze the audit data from Linux Host Server and MikroTik Edge Router, then output the report cleanly partitioned into two sections matching the exact HTML tags, structure, and emojis below.\n\nCRITICAL TELEGRAM RULES & HARD LIMITS:\n1. STRICT LENGTH LIMIT: Total output MUST be under 3600 characters (Telegram strictly rejects messages over 4,096 characters). Be extremely concise.\n2. LIST TRUNCATION: NEVER dump long logs or IP lists. Summarize counts and mention at most 2 examples (e.g. \"15 IPs banned\").\n3. ONLY use valid Telegram HTML tags: **, **, *, *, `, `, \n\n,\n\n.\n4. EVERY opening tag MUST have a matching closing tag.\n5. NEVER use literal '<' or '>' symbols (write \"under\", \"below\", \"exceeds\", or \"to\").\n6. NEVER use Markdown syntax (no asterisks, backticks, or hashes).\n7. Output ONLY raw HTML (no code fences).\n\nEXPECTED TEMPLATE:\n\n🟢 Infrastructure Status: All Systems Operational\n\nQuick Overview:\n[1-2 concise sentences summarizing infrastructure health, load vs threshold, and edge security]\n\n━━━━━━━━━━━━━━━━━━━━\n🖥️ LINUX WEB SERVER AUDIT\n━━━━━━━━━━━━━━━━━━━━\n\nSystem & Resource Metrics:\n⏱️ Uptime: [Host Uptime] (Baseline: Stable)\n👥 Active Users: [Host active sessions summary] (Expected: 1 to 3 admin sessions)\n📊 Load Average: [1m, 5m, 15m] (Normal: below core count / under 2.0)\n💾 Memory & Swap: [Host Used/Total (%)] | Swap: [Used] (Normal: RAM under 80%, Swap under 20%)\n💽 Disk Space: [Host Root used % (available GB)] (Threshold: under 80% used)\n📁 Top Storage: [Largest directory] (Target: Stable)\n\nWeb & Security Insights:\n⚙️ PHP-FPM Pool Analysis:\n• Workers Count: [Count] active workers (Range: 2 to 10 workers)\n• CPU & RAM: CPU: [Total CPU]% | RAM: [Total RAM]% (Threshold: CPU under 60%, RAM under 50%)\n• Status: [Normal traffic / potential bottleneck]\n\n🛡️ Host Defense & Fail2ban:\n• Service Status: [active/running] (Expected: active/running)\n• Active Jails & Bans: [Total count and top 2 banned IPs only] (Normal: under 50 bans)\n• Router Hook Status: [Host-to-MikroTik sync status] (Expected: Synchronized)\n\n━━━━━━━━━━━━━━━━━━━━\n🌐 MIKROTIK EDGE ROUTER AUDIT\n━━━━━━━━━━━━━━━━━━━━\n\nRouter Health & Resources:\n⏱️ Uptime: [MikroTik Uptime] (Baseline: Continuous)\n👥 Active Sessions: [Admin sessions summary] (Expected: 1 authorized admin session)\n📊 CPU Load: [MikroTik CPU Load %] (Normal: under 30%, Peak: under 60%)\n💾 Free Memory: [Free RAM MB/GB] (Threshold: above 100 MiB free)\n\n🛡️ Perimeter Firewall & Security:\n• Fail2ban Blocklist: [Total rule count] (Expected: Matching host ban list)\n• Failed Logins / Attacks: [Count of failed auth logs] (Threshold: 0 unrecognized attempts)\n• Firewall Drops: [Summary of dropped attack packets] (Normal: Drops active on WAN)\n\n📈 Network Interfaces & Traffic:\n• Interface Volume: [Summary of Rx/Tx volume] (Normal: Within allocated uplink)\n• Traffic State: [Normal throughput / unusual saturation]\n\n💡 Action Items:\n• [Brief action point 1]\n• [Brief action point 2]\n\n=========================================\nAUDIT DATA INPUTS:\n\n=== LINUX WEB SERVER AUDIT ===\n{{ $('Website-Monitor').first().json.stdout }}\n\n=== MIKROTIK EDGE ROUTER AUDIT ===\n{{ $('Mikrotik-Monitor').first().json.stdout }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        560,
+        160
+      ],
+      "id": "93b9cf47-5826-40fb-b9b3-f5cf66809e08",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1184,
+        144
+      ],
+      "id": "d508b5c5-29e4-4ebf-96d4-b5a31313f31f",
+      "name": "Send a text message",
+      "webhookId": "c1901625-0d42-42bd-ac5e-7e79dba0787b",
+      "credentials": {
+        "telegramApi": {
+          "id": "AKgVhd7l89b2lyeY",
+          "name": "test-server-monitoring-bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "meta-llama/llama-3.1-8b-instruct",
+          "mode": "list",
+          "cachedResultName": "meta-llama/llama-3.1-8b-instruct"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        384
+      ],
+      "id": "58a98040-c946-4f9a-a458-0662d0d57d3b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "nv7RDYPRZdRnO5jH",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        304,
+        128
+      ],
+      "id": "a8526694-d701-4170-aadf-48a502269167",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "/home/amirali/monitor_report.sh > /dev/null 2>&1 && cat /home/amirali/server_monitor_output.txt"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4a4edef2-e45f-434a-ae52-3463024c65ad",
+      "name": "Website-Monitor",
+      "credentials": {
+        "sshPrivateKey": {
+          "id": "5fdozYFAZKr3tLQF",
+          "name": "Website"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "sshpass -p 'JJvRZ4DpnRCcQ4ai' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null rahnama@46.245.68.179 \"/import file-name=Mikrotik-Monitoring.rsc verbose=yes\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        0,
+        240
+      ],
+      "id": "76c78488-848a-432e-bf83-aa4c8a528eb1",
+      "name": "Mikrotik-Monitor"
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatIds = [\n  '-1004427360464' \n];\n\nconst reportText = $('Basic LLM Chain').first().json.text;\n\nreturn chatIds.map(id => ({\n  json: {\n    chatId: id,\n    text: reportText\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        144
+      ],
+      "id": "726fea1d-771a-4f86-9a2c-5ee527af3f0f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -272,
+        128
+      ],
+      "id": "3b14e17c-9a9d-4697-bd52-fe12629afe25",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Website-Monitor": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mikrotik-Monitor": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Website-Monitor",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Mikrotik-Monitor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "ad66a921-d783-465a-998b-a41fec935251",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0476c5dff5da4542b25e36272cbbbcf1a512a83f635241392c4c8f18c8e8b9f3"
+  },
+  "nodeGroups": [],
+  "id": "i0NbekhXTRN9tCjp",
+  "tags": []
+}

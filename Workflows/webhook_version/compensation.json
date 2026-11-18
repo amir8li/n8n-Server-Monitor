@@ -1,0 +1,117 @@
+{
+  "name": "compensation",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -672,
+        -144
+      ],
+      "id": "aabb3109-bf6f-4551-b679-7c4cb666b588",
+      "name": "Error Trigger",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "17a2c3c1-cc9b-48aa-b9be-c368d6a8133f",
+              "leftValue": "={{ $json.execution.lastNodeExecuted }}",
+              "rightValue": "Send a text message",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -352,
+        -144
+      ],
+      "id": "4695f057-4ae9-43a1-8459-0651c288c59c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "-1004427360464",
+        "text": "=🚨 Server Monitoring Pipeline Error\n\nFailed Node: {{ $json.execution.lastNodeExecuted }}\nWorkflow: {{ $json.workflow.name }}\nExecution ID: {{ $json.execution.id }}\n\nError:\n{{ $json.execution.error.message }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        48
+      ],
+      "id": "1d316b0b-9510-4be2-bc6c-9387b508e14e",
+      "name": "Send a text message",
+      "webhookId": "97e40f86-d7be-4335-8655-017c049038b6",
+      "credentials": {
+        "telegramApi": {
+          "id": "AKgVhd7l89b2lyeY",
+          "name": "test-server-monitoring-bot"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "eb05c7a7-f422-4907-9ee3-4b551918b2dd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0476c5dff5da4542b25e36272cbbbcf1a512a83f635241392c4c8f18c8e8b9f3"
+  },
+  "nodeGroups": [],
+  "id": "RbqsQDY9QtHMi2wQ",
+  "tags": []
+}

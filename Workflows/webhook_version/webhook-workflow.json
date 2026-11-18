@@ -1,0 +1,111 @@
+{
+  "name": "webhook-workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "server-audit",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3ddb98ea-adca-4e24-8beb-3f8466e53ba8",
+      "name": "Webhook",
+      "webhookId": "7d6abf6c-c64f-4723-9728-b29953f38161"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "CgbvB93BbkMn3wSg",
+          "mode": "list",
+          "cachedResultName": "server_audits",
+          "cachedResultUrl": "/projects/H9Uh7P5pHWbgNPoQ/datatables/CgbvB93BbkMn3wSg"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "server_id": "={{ $json.body.server_id }}",
+            "audit_data": "={{ $json.body.audit_data }}",
+            "is_sent": false
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "server_id",
+              "displayName": "server_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "audit_data",
+              "displayName": "audit_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "is_sent",
+              "displayName": "is_sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "1e7b6d7e-0b6b-4d81-9fc6-fa7c225d7a58",
+      "name": "Insert row"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "79fc731e-c393-4483-925a-1cce62721bf7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0476c5dff5da4542b25e36272cbbbcf1a512a83f635241392c4c8f18c8e8b9f3"
+  },
+  "nodeGroups": [],
+  "id": "NvxZ5WlfQkV6svbV",
+  "tags": []
+}

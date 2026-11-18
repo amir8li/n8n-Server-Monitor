@@ -1,0 +1,410 @@
+{
+  "name": "Server monitoring webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert DevOps engineer delivering an ultra-concise health update for a single server to a team chat.\n\nAnalyze the audit data for server: {{ $json.server_id }}\nGenerate a clean, focused status report matching the EXACT structure below.\n\nCRITICAL TELEGRAM HTML RULES:\n1. ALLOWED TAGS ONLY: Use ONLY <b>, </b>, <i>, </i>, <code>, </code>, <blockquote expandable>, </blockquote>.\n2. EXPANDABLE SECTION: The header and Quick Overview MUST be outside at the top. Everything else (Metrics, Services, Action Items) MUST be wrapped inside a single <blockquote expandable> ... </blockquote> block.\n3. ZERO CUSTOM TAGS: NEVER wrap words in angle brackets (e.g., do NOT write <postgres>, <defunct>, <none>, <service>, or <placeholder>).\n4. NO ANGLE BRACKETS: NEVER use literal '<' or '>' in comparisons. Write \"under 80%\", \"exceeds 2.0\", \"below 1.0\", or \"to\".\n5. COMPLETE TAG PAIRS: Every <code>, <b>, <i>, and <blockquote expandable> must have an exact matching closing tag.\n6. NO MARKDOWN: Output ONLY valid text and allowed HTML tags. Do not use asterisks, backticks, or code fences.\n7. HARD LIMIT: Total output must be under 1,500 characters.\n\nEXPECTED TEMPLATE:\n\n🟢 <b>{{ $json.server_id.toUpperCase() }}: Status Operational</b>\n\n<b>Quick Overview:</b>\n[1-2 brief sentences summarizing machine health, workload, and security state]\n\n<blockquote expandable>━━━━━━━━━━━━━━━━━━━━\n🖥️ <b>SYSTEM & RESOURCE METRICS</b>\n━━━━━━━━━━━━━━━━━━━━\n⏱️ <b>Uptime:</b> <code>[Host Uptime]</code> <i>(Baseline: Stable)</i>\n👥 <b>Active Sessions:</b> <code>[Active users count]</code> <i>(Expected: 1 to 3 admin sessions)</i>\n📊 <b>Load Average:</b> <code>[1m, 5m, 15m]</code> <i>(Normal: under 2.0)</i>\n💾 <b>Memory & Swap:</b> <code>[Used/Total %] | Swap: [Used]</code> <i>(Normal: RAM under 80%, Swap under 20%)</i>\n💽 <b>Disk Space:</b> <code>[Root used % (available GB)]</code> <i>(Threshold: under 80% used)</i>\n📁 <b>Top Storage:</b> <code>[Largest directory path and size]</code> <i>(Target: Stable)</i>\n\n━━━━━━━━━━━━━━━━━━━━\n🛡️ <b>SERVICES & SECURITY INSIGHTS</b>\n━━━━━━━━━━━━━━━━━━━━\n• <b>Active Services:</b> <code>[Key processes: e.g. PHP-FPM / MySQL / Nginx / Docker]</code> <i>(Status: Healthy/Active)</i>\n• <b>Host Defense (Fail2ban):</b> <code>[Active jails and total bans count]</code> <i>(Normal: under 50 bans)</i>\n• <b>Top Banned / Suspicious IPs:</b> <code>[List at most 2 IPs or None]</code>\n\n━━━━━━━━━━━━━━━━━━━━\n💡 <b>Action Items:</b>\n• [Brief action point 1 or None required]\n• [Brief action point 2 if applicable]</blockquote>\n\n=========================================\nAUDIT DATA INPUT:\n\n{{ $json.combined_audit }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        864,
+        -112
+      ],
+      "id": "4d1f7e70-aabb-4256-a3b9-59f19ba87744",
+      "name": "Basic LLM Chain",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1472,
+        -128
+      ],
+      "id": "b15c1223-831d-47eb-b406-1159a2219cd5",
+      "name": "Send a text message",
+      "webhookId": "c07a558f-6f0e-404f-8725-1c47ef5f4d39",
+      "credentials": {
+        "telegramApi": {
+          "id": "AKgVhd7l89b2lyeY",
+          "name": "test-server-monitoring-bot"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "meta-llama/llama-3.1-8b-instruct",
+          "mode": "list",
+          "cachedResultName": "meta-llama/llama-3.1-8b-instruct"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        176
+      ],
+      "id": "5280d8d3-d603-4186-b1b7-d63021584e48",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "nv7RDYPRZdRnO5jH",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatIds = [\n  '-1004427360464'\n  // '1991057133'\n];\nfunction sanitizeTelegramHtml(rawText) {\n  if (!rawText) return '';\n\n  let text = rawText;\n\n  text = text.replace(/<blockquote\\s+expandable\\s*>/gi, '<blockquote expandable>');\n\n  const allowedTagRegex = /^<\\/?(b|i|code|blockquote(\\s+expandable)?)\\b[^>]*>$/i;\n\n  const tokens = text.split(/(<\\/?[a-zA-Z0-9_-]+(?:\\s+[^>]*)?>)/g);\n  \n  const stack = [];\n  let sanitized = '';\n\n  for (const token of tokens) {\n    if (!token) continue;\n\n    if (token.startsWith('<') && token.endsWith('>')) {\n      if (!allowedTagRegex.test(token)) {\n        sanitized += token.replace(/</g, '&lt;').replace(/>/g, '&gt;');\n        continue;\n      }\n\n      const isClosing = token.startsWith('</');\n      const tagName = token.replace(/<\\/?([a-zA-Z0-9]+).*/, '$1').toLowerCase();\n\n      if (!isClosing) {\n        stack.push(tagName);\n        sanitized += (tagName === 'blockquote') ? '<blockquote expandable>' : `<${tagName}>`;\n      } else {\n        const index = stack.lastIndexOf(tagName);\n        if (index === -1) {\n          continue;\n        }\n\n        while (stack.length > index + 1) {\n          const innerTag = stack.pop();\n          sanitized += `</${innerTag}>`;\n        }\n\n        stack.pop();\n        sanitized += `</${tagName}>`;\n      }\n    } else {\n      sanitized += token.replace(/<(?!(b|\\/b|i|\\/i|code|\\/code|blockquote expandable|\\/blockquote)>)/gi, '&lt;');\n    }\n  }\n\n  while (stack.length > 0) {\n    const remainingTag = stack.pop();\n    sanitized += `</${remainingTag}>`;\n  }\n\n  return sanitized;\n}\n\nconst results = [];\n\nfor (const item of $input.all()) {\n  const rawContent = item.json.text || item.json.output || '';\n  const cleanContent = sanitizeTelegramHtml(rawContent);\n\n  for (const chatId of chatIds) {\n    results.push({\n      json: {\n        chatId: chatId,\n        text: cleanContent,\n        server_id: item.json.server_id || 'UNKNOWN'\n      }\n    });\n  }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        -80
+      ],
+      "id": "9108db44-4883-4f33-98ea-2cbc83ed63e7",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "CgbvB93BbkMn3wSg",
+          "mode": "list",
+          "cachedResultName": "server_audits",
+          "cachedResultUrl": "/projects/H9Uh7P5pHWbgNPoQ/datatables/CgbvB93BbkMn3wSg"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "is_sent",
+              "condition": "isFalse"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -32,
+        -80
+      ],
+      "id": "4e95af30-fe68-450d-871e-ad11eba0638d",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "CgbvB93BbkMn3wSg",
+          "mode": "list",
+          "cachedResultName": "server_audits",
+          "cachedResultUrl": "/projects/H9Uh7P5pHWbgNPoQ/datatables/CgbvB93BbkMn3wSg"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "={{ $('Gathering Rows').item.json.id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_sent": true
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "server_id",
+              "displayName": "server_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "audit_data",
+              "displayName": "audit_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "is_sent",
+              "displayName": "is_sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1824,
+        192
+      ],
+      "id": "d8939091-514c-42ff-a32c-784b2ed28213",
+      "name": "Update row(s)"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9,
+              "triggerAtMinute": null
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -288,
+        -80
+      ],
+      "id": "ea9cc555-2de4-4a69-9743-1748c431b2cf",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        528,
+        -80
+      ],
+      "id": "d02f9e54-3eca-4fd2-8d07-530eafd34d68",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatIds = [\n  '-1004427360464'\n  // '1991057133'\n];\nlet allReports = [];\n\nlet runIndex = 0;\nwhile (true) {\n  try {\n    const runData = $('Code in JavaScript').all(0, runIndex);\n    if (!runData || runData.length === 0) break;\n    allReports.push(...runData);\n    runIndex++;\n  } catch (err) {\n    break;\n  }\n}\n\nif (allReports.length <= 1) {\n  const doneItems = $input.all();\n  if (doneItems.length > allReports.length) {\n    allReports = doneItems;\n  }\n}\n\nlet serverStatusList = [];\nlet healthyCount = 0;\nlet alertCount = 0;\n\nfor (const item of allReports) {\n  const text = item.json.text || '';\n  const serverId = (item.json.server_id || item.json.id || 'UNKNOWN').toString().toUpperCase();\n\n  const statusMatch = text.match(/(🟢|🟡|🔴)\\s*<b>([^<]+)<\\/b>/i);\n\n  if (statusMatch) {\n    const emoji = statusMatch[1];\n    const statusText = statusMatch[2].trim();\n\n    if (emoji === '🟢') healthyCount++;\n    else alertCount++;\n\n    serverStatusList.push(`${emoji} <b>${statusText}</b>`);\n  } else {\n    healthyCount++;\n    serverStatusList.push(`🟢 <b>${serverId}: Status Operational</b>`);\n  }\n}\n\nconst now = new Date().toLocaleString('fa-IR', { timeZone: 'Asia/Tehran' });\n\nconst message = \n`📊 <b>داشبورد وضعیت سلامت زیرساخت</b>\n⏱️ زمان بررسی: <code>${now}</code>\n━━━━━━━━━━━━━━━━━━━━\n\n${serverStatusList.join('\\n')}\n\n━━━━━━━━━━━━━━━━━━━━\n📈 <b>آمار کل:</b> <code>${serverStatusList.length}</code> سرور بررسی شد.\n🟢 وضعیت پایدار: <code>${healthyCount}</code> | 🔴 نیازمند بررسی: <code>${alertCount}</code>`;\n\nreturn chatIds.map(id => ({\n  json: {\n    chatId: id,\n    text: message\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        -352
+      ],
+      "id": "b7942048-21d7-4e5a-b418-9cec058f471f",
+      "name": "Build Rollup Summary"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        976,
+        -352
+      ],
+      "id": "3b38c588-7f9f-4cdc-bbc0-8186ee1fbf5a",
+      "name": "Send a text message2",
+      "webhookId": "c07a558f-6f0e-404f-8725-1c47ef5f4d39",
+      "credentials": {
+        "telegramApi": {
+          "id": "AKgVhd7l89b2lyeY",
+          "name": "test-server-monitoring-bot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(row => {\n  const srvName = row.json.server_id || 'UNKNOWN';\n  const srvData = row.json.audit_data || 'No data';\n\n  return {\n    json: {\n      id: row.json.id,\n      server_id: srvName,\n      audit_data: srvData,\n      combined_audit: `=== ${srvName.toUpperCase()} AUDIT ===\\n${srvData}`\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        16
+      ],
+      "id": "cfea352e-1753-400c-b8a2-de63d467f2ac",
+      "name": "Gathering Rows"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Gathering Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Build Rollup Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row(s)": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Rollup Summary": {
+      "main": [
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gathering Rows": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "RbqsQDY9QtHMi2wQ"
+  },
+  "versionId": "03e05249-f032-4cb2-9a08-0c75b7700e70",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0476c5dff5da4542b25e36272cbbbcf1a512a83f635241392c4c8f18c8e8b9f3"
+  },
+  "nodeGroups": [],
+  "id": "AlGdMqZBgukRyzNW",
+  "tags": []
+}
